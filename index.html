@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spirit Week Scoreboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fugaz+One&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .wrapper {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .left-content {
+            width: 60%;
+            background-image: linear-gradient(to bottom, #0f0084,#212121,#212121,#212121,#212121,#ffc400);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .grand-total {
+            font-family: "Fugaz One", serif;
+            font-size: 3rem;
+            margin: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .triangle {
+            width: 0;
+            height: 0;
+            border-top: 20px solid transparent;
+            border-bottom: 20px solid transparent;
+            border-right: 30px solid white;
+            opacity: 0.1;
+            margin-left: 20px;
+            transition: opacity 0.5s;
+        }
+
+        .active {
+            opacity: 1;
+        }
+
+        .blue-score {
+            font-family: "Fugaz One", serif;
+            color: blue;
+            -webkit-text-stroke: .5pt rgb(97, 186, 255);
+            font-weight: bold;
+        }
+
+        .gold-score {
+            font-family: "Fugaz One", serif;
+            color: goldenrod;
+            -webkit-text-stroke: .5pt rgb(255, 231, 77);
+            font-weight: bold;
+        }
+
+        .blue-name {
+            font-family: "Fugaz One", serif;
+            color: blue;
+            font-size: 6rem;
+            -webkit-text-stroke: 2pt rgb(0, 138, 243);
+            font-weight: bold;
+            margin-right: 20px;
+        }
+
+        .gold-name {
+            font-family: "Fugaz One", serif;
+            color: rgb(245, 188, 0);
+            font-size: 6rem;
+            -webkit-text-stroke: 2pt rgb(255, 230, 44);
+            
+            font-weight: bold;
+            margin-right: 20px;
+        }
+
+        .white-score {
+            font-family: "Fugaz One", serif;
+            color: white;
+            font-size: 4rem;
+            -webkit-text-stroke: .1pt rgb(176, 176, 176);
+            font-weight: bold;
+        }
+
+        .container {
+            width: 40%;
+            height: 100vh;
+            overflow-y: hidden;
+            position: relative;
+            background-color: #212121;
+        }
+
+        .scroll-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .box {
+            height: 100vh;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .day {
+            font-family: "Fugaz One", serif;
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .day-total {
+            font-family: "Fugaz One", serif;
+            font-size: 2rem;
+            color: #dbdbdb;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .activity {
+            font-family: "Fugaz One", serif;
+            font-size: 1.5rem;
+            color: #bbbbbb;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <!-- Left Content Area -->
+    <div class="left-content">
+        <div class="grand-total">
+            
+            <span class="blue-name">BLUE</span>&nbsp;
+            <span class="white-score" id="grandTotalBlue">0</span>
+            <div id="triangleBlue" class="triangle"></div>
+        </div>
+        <div class="grand-total">
+            
+            <span class="gold-name">GOLD   </span>&nbsp;
+            <span class="white-score" id="grandTotalGold">0</span>
+            <div id="triangleGold" class="triangle"></div>
+        </div>
+    </div>
+
+    <!-- Right Scrolling Container -->
+    <div class="container" id="scrollContainer">
+        <div class="scroll-content" id="dailyScoresContainer">
+            <!-- Dynamic sections will be inserted here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentIndex = 0;
+    const container = document.getElementById("scrollContainer");
+
+    function autoScroll() {
+        const boxes = document.querySelectorAll(".box");
+        if (boxes.length === 0) return;
+
+        currentIndex++;
+        boxes[currentIndex].scrollIntoView({ behavior: "smooth" });
+
+        if (currentIndex === boxes.length - 1) {
+            setTimeout(() => {
+                currentIndex = 0;
+                container.scrollTo({ top: 0, behavior: "auto" });
+            }, 5000);
+        }
+    }
+
+    setInterval(autoScroll, 5000);
+
+    function fetchGoogleSheetData() {
+        fetch("https://script.google.com/macros/s/AKfycbyWdAwWi93HULUKB-TbYXyR059XkFVUXVKfItTrzOEVpYq3SQ74xf4lg8bgkpuBXn9P/exec")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("grandTotalBlue").textContent = `${data.grandTotalBlue}`;
+                document.getElementById("grandTotalGold").textContent = `${data.grandTotalGold}`;
+
+                document.getElementById("triangleBlue").classList.toggle("active", data.grandTotalBlue > data.grandTotalGold);
+                document.getElementById("triangleGold").classList.toggle("active", data.grandTotalGold > data.grandTotalBlue);
+
+                const dailyScoresContainer = document.getElementById("dailyScoresContainer");
+                dailyScoresContainer.innerHTML = '';
+
+                data.dailyScores.forEach((dayData) => {
+                    const dayBox = document.createElement("div");
+                    dayBox.className = "box";
+                    dayBox.style.backgroundColor = "#141414";
+
+                    let content = `<div class="day">${dayData.day}</div>`;
+                    content += `<div class="day-total">DAY TOTAL: <span class="blue-score">${dayData.total.blue}</span> | <span class="gold-score">${dayData.total.gold}</span></div>`;
+
+                    dayData.activities.forEach(activity => {
+                        content += `<div class="activity">${activity.name}: <span class="blue-score">${activity.blueScore}</span> | <span class="gold-score">${activity.goldScore}</span></div>`;
+                    });
+
+                    dayBox.innerHTML = content;
+                    dailyScoresContainer.appendChild(dayBox);
+                });
+
+                if (data.dailyScores.length > 0) {
+                    const cloneBox = dailyScoresContainer.firstChild.cloneNode(true);
+                    dailyScoresContainer.appendChild(cloneBox);
+                }
+            });
+    }
+
+    fetchGoogleSheetData();
+    setInterval(fetchGoogleSheetData, 5000);
+</script>
+
+</body>
+</html>
